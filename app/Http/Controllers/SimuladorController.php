@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 
 class SimuladorController extends Controller
 {
@@ -14,7 +15,8 @@ class SimuladorController extends Controller
         $this->carregarArquivoDadosSimulador()
              ->simularEmprestimo($request->valor_emprestimo)
              ->filtrarInstituicao($request->instituicoes)
-        ;
+             ->filtrarConvenio($request->convenios)
+             ->filtrarParcelas($request->parcela);
         return \response()->json($this->simulacao);
     }
 
@@ -56,6 +58,39 @@ class SimuladorController extends Controller
             }
             $this->simulacao = $arrayAux;
         }
+        return $this;
+    }
+
+    private function filtrarConvenio(array $convenios) : self
+    {
+        if (\count($convenios))
+        {
+            foreach ($this->simulacao as $key => $simulacao) {
+
+                foreach ($simulacao as $skey => $s) {
+
+                    if(!in_array($s['convenio'], $convenios)) {
+                        unset($this->simulacao[$key][$skey]);
+                    }
+                }
+            }
+        }
+        $this->simulacao = array_filter($this->simulacao);
+        return $this;
+    }
+
+    private function filtrarParcelas(int $parcela) : self
+    {
+        foreach ($this->simulacao as $key => $simulacao) {
+
+            foreach ($simulacao as $skey => $s) {
+
+                if(!($s['parcelas'] == $parcela)) {
+                    unset($this->simulacao[$key][$skey]);
+                }
+            }
+        }
+        $this->simulacao = array_filter($this->simulacao);
         return $this;
     }
 }
