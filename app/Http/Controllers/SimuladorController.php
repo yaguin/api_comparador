@@ -74,23 +74,25 @@ class SimuladorController extends Controller
                     }
                 }
             }
+            $this->simulacao = array_filter($this->simulacao);
         }
-        $this->simulacao = array_filter($this->simulacao);
         return $this;
     }
 
     private function filtrarParcelas(int $parcela) : self
     {
-        foreach ($this->simulacao as $key => $simulacao) {
+        if ($parcela) {
+            foreach ($this->simulacao as $key => $simulacao) {
 
-            foreach ($simulacao as $skey => $s) {
+                foreach ($simulacao as $skey => $s) {
 
-                if(!($s['parcelas'] == $parcela)) {
-                    unset($this->simulacao[$key][$skey]);
+                    if($s['parcelas'] != $parcela) {
+                        unset($this->simulacao[$key][$skey]);
+                    }
                 }
             }
+            $this->simulacao = array_filter($this->simulacao);
         }
-        $this->simulacao = array_filter($this->simulacao);
         return $this;
     }
 }
