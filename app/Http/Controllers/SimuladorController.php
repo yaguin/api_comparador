@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 
 class SimuladorController extends Controller
 {
@@ -12,12 +11,13 @@ class SimuladorController extends Controller
 
     public function simular(Request $request)
     {
+        $request->valor_emprestimo = $this->removeFormatRealMoneyStringToValue($request->valor_emprestimo);
         $this->carregarArquivoDadosSimulador()
              ->simularEmprestimo($request->valor_emprestimo)
              ->filtrarInstituicao($request->instituicoes)
              ->filtrarConvenio($request->convenios)
              ->filtrarParcelas($request->parcela);
-        return \response()->json($this->simulacao);
+        return \response()->json(json_encode($this->simulacao));
     }
 
     private function carregarArquivoDadosSimulador() : self
@@ -68,7 +68,6 @@ class SimuladorController extends Controller
             foreach ($this->simulacao as $key => $simulacao) {
 
                 foreach ($simulacao as $skey => $s) {
-
                     if(!in_array($s['convenio'], $convenios)) {
                         unset($this->simulacao[$key][$skey]);
                     }
@@ -79,7 +78,7 @@ class SimuladorController extends Controller
         return $this;
     }
 
-    private function filtrarParcelas(int $parcela) : self
+    private function filtrarParcelas(int $parcela = null) : self
     {
         if ($parcela) {
             foreach ($this->simulacao as $key => $simulacao) {
@@ -94,5 +93,16 @@ class SimuladorController extends Controller
             $this->simulacao = array_filter($this->simulacao);
         }
         return $this;
+    }
+
+    private function removeFormatRealMoneyStringToValue(string $value): float
+    {
+        if (is_float($value) || is_numeric($value)) {
+            return $value;
+        } else if (!is_string($value)) {
+            return 0;
+        }
+
+        return (float) str_replace(['R$', ' ', ' ', '.', ','], ['', '', '', '', '.'], $value);
     }
 }
